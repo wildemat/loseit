@@ -1,0 +1,31 @@
+{
+  "name": "loseit-data-export",
+  "version": "1.0.0",
+  "description": "Script to export data from LoseIt.com using browser authentication",
+  "main": "export-data.ts",
+  "scripts": {
+    "start": "ts-node export-data.ts",
+    "build": "tsc",
+    "export": "ts-node export-data.ts",
+    "combine": "ts-node combine_data.ts"
+  },
+  "keywords": [
+    "loseit",
+    "data-export",
+    "automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.5",
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "csv-parse": "^5.5.3",
+    "csv-stringify": "^6.4.5",
+    "playwright": "^1.40.0"
+  }
+}
