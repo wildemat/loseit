@@ -4,10 +4,20 @@
   "description": "Script to export data from LoseIt.com using browser authentication",
   "main": "export-data.ts",
   "scripts": {
-    "start": "ts-node export-data.ts",
+    "setup": "npm run db:start && sleep 5 && npm run data:process && npm run db:load && npm run mcp:bundle",
+    "data:export": "ts-node export-data.ts",
+    "data:process": "ts-node transform.ts",
+    "data:update": "npm run data:export && npm run data:process && npm run db:load",
+    "db:start": "docker-compose up -d postgres",
+    "db:stop": "docker-compose down",
+    "db:logs": "docker-compose logs -f postgres",
+    "db:load": "ts-node db/load-data.ts",
+    "db:psql": "docker-compose exec postgres psql -U loseit -d loseit",
+    "db:ui": "docker-compose --profile ui up -d pgadmin && echo 'pgAdmin available at http://localhost:5050 (admin@loseit.local / admin)'",
     "build": "tsc",
-    "export": "ts-node export-data.ts",
-    "combine": "ts-node combine_data.ts"
+    "mcp:bundle": "npm run build && mcpb pack . loseit.mcpb",
+    "mcp:validate": "mcpb validate manifest.json",
+    "mcp:info": "mcpb info loseit.mcpb"
   },
   "keywords": [
     "loseit",
@@ -19,13 +29,17 @@
   "devDependencies": {
     "@types/adm-zip": "^0.5.5",
     "@types/node": "^20.10.0",
+    "@types/pg": "^8.10.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.23.0",
     "adm-zip": "^0.5.10",
     "csv-parse": "^5.5.3",
     "csv-stringify": "^6.4.5",
+    "pg": "^8.11.3",
+    "mysql2": "^3.6.5",
     "playwright": "^1.40.0"
   }
 }

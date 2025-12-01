@@ -1,8 +1,8 @@
-# SQLite Database Schema
+# Database Schema
 
-This document outlines the SQLite tables that will be created from the LoseIt CSV exports.
+This document outlines the PostgreSQL/MySQL tables that store LoseIt health data.
 
-## Database: `loseit.db`
+## Database: `loseit`
 
 ### Overview
 
@@ -31,13 +31,16 @@ The database consists of 5 main tables, each combining related CSV files grouped
 **Schema:**
 
 ```sql
-CREATE TABLE markers (
-    date TEXT PRIMARY KEY,
-    body_fat REAL,
-    weight REAL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS markers (
+  id SERIAL PRIMARY KEY,
+  date TEXT UNIQUE NOT NULL,
+  body_fat NUMERIC(5,2),
+  weight NUMERIC(6,2),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_markers_date ON markers(date);
 ```
 
 **Column Mappings:**
@@ -45,9 +48,9 @@ CREATE TABLE markers (
 | Source File    | Source Column | Target Column | Type | Notes                    |
 |----------------|---------------|---------------|------|--------------------------|
 | body-fat.csv   | Date          | date          | TEXT | Primary key              |
-| body-fat.csv   | Value         | body_fat      | REAL | Body fat percentage      |
+| body-fat.csv   | Value         | body_fat      | NUMERIC | Body fat percentage      |
 | weights.csv    | Date          | date          | TEXT | Join key                 |
-| weights.csv    | Weight        | weight        | REAL | Weight measurement       |
+| weights.csv    | Weight        | weight        | NUMERIC | Weight measurement       |
 
 **Excluded Columns:**
 - `Secondary Value` (from both files)
@@ -56,7 +59,7 @@ CREATE TABLE markers (
 
 **Sample Row:**
 ```
-date: "2025-11-28"
+date: "11/28/2025"
 body_fat: 18.5
 weight: 185.2
 ```
@@ -77,15 +80,18 @@ weight: 185.2
 **Schema:**
 
 ```sql
-CREATE TABLE activity (
-    date TEXT PRIMARY KEY,
-    steps INTEGER,
-    sleep_hours REAL,
-    exercise_minutes REAL,
-    exercise_count INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS activity (
+  id SERIAL PRIMARY KEY,
+  date TEXT UNIQUE NOT NULL,
+  steps INTEGER,
+  sleep_hours NUMERIC(4,2),
+  exercise_minutes NUMERIC(6,2),
+  exercise_count INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_activity_date ON activity(date);
 ```
 
 **Column Mappings:**
@@ -95,9 +101,9 @@ CREATE TABLE activity (
 | steps.csv         | Date          | date              | TEXT    | -           | Primary key                     |
 | steps.csv         | Value         | steps             | INTEGER | -           | Daily step count                |
 | sleep.csv         | Date          | date              | TEXT    | -           | Join key                        |
-| sleep.csv         | Value         | sleep_hours       | REAL    | -           | Hours of sleep                  |
+| sleep.csv         | Value         | sleep_hours       | NUMERIC | -           | Hours of sleep                  |
 | exercise-logs.csv | Date          | date              | TEXT    | Group       | Join key                        |
-| exercise-logs.csv | Quantity      | exercise_minutes  | REAL    | SUM         | Total exercise duration per day |
+| exercise-logs.csv | Quantity      | exercise_minutes  | NUMERIC | SUM         | Total exercise duration per day |
 | exercise-logs.csv | -             | exercise_count    | INTEGER | COUNT       | Number of exercise sessions     |
 
 **Excluded Columns:**
@@ -112,7 +118,7 @@ CREATE TABLE activity (
 
 **Sample Row:**
 ```
-date: "2025-11-28"
+date: "11/28/2025"
 steps: 10523
 sleep_hours: 7.5
 exercise_minutes: 45.0
@@ -133,15 +139,18 @@ exercise_count: 2
 **Schema:**
 
 ```sql
-CREATE TABLE calories (
-    date TEXT PRIMARY KEY,
-    food_calories REAL,
-    exercise_calories REAL,
-    calorie_budget REAL,
-    tdee REAL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS calories (
+  id SERIAL PRIMARY KEY,
+  date TEXT UNIQUE NOT NULL,
+  food_calories NUMERIC(7,2),
+  exercise_calories NUMERIC(7,2),
+  calorie_budget NUMERIC(7,2),
+  tdee NUMERIC(7,2),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_calories_date ON calories(date);
 ```
 
 **Column Mappings:**
@@ -149,14 +158,14 @@ CREATE TABLE calories (
 | Source File              | Source Column  | Target Column      | Type | Notes                              |
 |--------------------------|----------------|--------------------|------|------------------------------------|
 | daily-calorie-summary.csv | Date           | date               | TEXT | Primary key                        |
-| daily-calorie-summary.csv | Food cals      | food_calories      | REAL | Calories consumed from food        |
-| daily-calorie-summary.csv | Exercise cals  | exercise_calories  | REAL | Calories burned from exercise      |
-| daily-calorie-summary.csv | Budget cals    | calorie_budget     | REAL | Remaining calorie budget           |
-| daily-calorie-summary.csv | EER            | tdee               | REAL | Total Daily Energy Expenditure     |
+| daily-calorie-summary.csv | Food cals      | food_calories      | NUMERIC | Calories consumed from food        |
+| daily-calorie-summary.csv | Exercise cals  | exercise_calories  | NUMERIC | Calories burned from exercise      |
+| daily-calorie-summary.csv | Budget cals    | calorie_budget     | NUMERIC | Remaining calorie budget           |
+| daily-calorie-summary.csv | EER            | tdee               | NUMERIC | Total Daily Energy Expenditure     |
 
 **Sample Row:**
 ```
-date: "2025-11-28"
+date: "11/28/2025"
 food_calories: 1850.0
 exercise_calories: 350.0
 calorie_budget: 1500.0
@@ -179,14 +188,17 @@ tdee: 2200.0
 **Schema:**
 
 ```sql
-CREATE TABLE macros (
-    date TEXT PRIMARY KEY,
-    protein_grams REAL,
-    carbs_grams REAL,
-    fiber_grams REAL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS macros (
+  id SERIAL PRIMARY KEY,
+  date TEXT UNIQUE NOT NULL,
+  protein_grams NUMERIC(6,2),
+  carbs_grams NUMERIC(6,2),
+  fiber_grams NUMERIC(6,2),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_macros_date ON macros(date);
 ```
 
 **Column Mappings:**
@@ -194,11 +206,11 @@ CREATE TABLE macros (
 | Source File       | Source Column | Target Column  | Type | Notes                    |
 |-------------------|---------------|----------------|------|--------------------------|
 | protein.csv       | Date          | date           | TEXT | Primary key              |
-| protein.csv       | Value         | protein_grams  | REAL | Protein intake in grams  |
+| protein.csv       | Value         | protein_grams  | NUMERIC | Protein intake in grams  |
 | carbohydrates.csv | Date          | date           | TEXT | Join key                 |
-| carbohydrates.csv | Value         | carbs_grams    | REAL | Carb intake in grams     |
+| carbohydrates.csv | Value         | carbs_grams    | NUMERIC | Carb intake in grams     |
 | fiber.csv         | Date          | date           | TEXT | Join key                 |
-| fiber.csv         | Value         | fiber_grams    | REAL | Fiber intake in grams    |
+| fiber.csv         | Value         | fiber_grams    | NUMERIC | Fiber intake in grams    |
 
 **Excluded Columns:**
 - `Secondary Value` (from all files)
@@ -206,7 +218,7 @@ CREATE TABLE macros (
 
 **Sample Row:**
 ```
-date: "2025-11-28"
+date: "11/28/2025"
 protein_grams: 125.5
 carbs_grams: 180.0
 fiber_grams: 28.3
@@ -226,22 +238,21 @@ fiber_grams: 28.3
 **Schema:**
 
 ```sql
-CREATE TABLE food (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT NOT NULL,
-    food_name TEXT,
-    meal TEXT,
-    quantity REAL,
-    units TEXT,
-    calories REAL,
-    nutrients TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (date) REFERENCES markers(date)
+CREATE TABLE IF NOT EXISTS food (
+  id SERIAL PRIMARY KEY,
+  date TEXT NOT NULL,
+  food_name TEXT,
+  meal TEXT,
+  quantity NUMERIC(10,2),
+  units TEXT,
+  calories NUMERIC(7,2),
+  nutrients JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_food_date ON food(date);
-CREATE INDEX idx_food_meal ON food(meal);
+CREATE INDEX IF NOT EXISTS idx_food_date ON food(date);
+CREATE INDEX IF NOT EXISTS idx_food_meal ON food(meal);
 ```
 
 **Column Mappings:**
@@ -251,10 +262,10 @@ CREATE INDEX idx_food_meal ON food(meal);
 | food-logs.csv | Date               | date          | TEXT | Foreign key to other tables              |
 | food-logs.csv | Name               | food_name     | TEXT | Name of food item                        |
 | food-logs.csv | Meal               | meal          | TEXT | Meal type (Breakfast, Lunch, Dinner, etc) |
-| food-logs.csv | Quantity           | quantity      | REAL | Amount consumed                          |
+| food-logs.csv | Quantity           | quantity      | NUMERIC | Amount consumed                          |
 | food-logs.csv | Units              | units         | TEXT | Unit of measurement (cups, oz, etc)      |
-| food-logs.csv | Calories           | calories      | REAL | Calorie content                          |
-| food-logs.csv | Multiple nutrients | nutrients     | TEXT | JSON string with nutritional breakdown   |
+| food-logs.csv | Calories           | calories      | NUMERIC | Calorie content                          |
+| food-logs.csv | Multiple nutrients | nutrients     | JSONB | JSON with nutritional breakdown   |
 
 **Nutrients JSON Structure:**
 
@@ -277,14 +288,14 @@ The `nutrients` column stores a JSON object with the following fields:
 
 | Source Column        | JSON Key     | Type | Unit |
 |----------------------|--------------|------|------|
-| Fat (g)              | fat          | REAL | g    |
-| Protein (g)          | protein      | REAL | g    |
-| Carbohydrates (g)    | carbs        | REAL | g    |
-| Saturated Fat (g)    | sat_fat      | REAL | g    |
-| Sugars (g)           | sugar        | REAL | g    |
-| Fiber (g)            | fiber        | REAL | g    |
-| Cholesterol (mg)     | cholesterol  | REAL | mg   |
-| Sodium (mg)          | sodium       | REAL | mg   |
+| Fat (g)              | fat          | NUMERIC | g    |
+| Protein (g)          | protein      | NUMERIC | g    |
+| Carbohydrates (g)    | carbs        | NUMERIC | g    |
+| Saturated Fat (g)    | sat_fat      | NUMERIC | g    |
+| Sugars (g)           | sugar        | NUMERIC | g    |
+| Fiber (g)            | fiber        | NUMERIC | g    |
+| Cholesterol (mg)     | cholesterol  | NUMERIC | mg   |
+| Sodium (mg)          | sodium       | NUMERIC | mg   |
 
 **Excluded Columns:**
 - `Icon` (not needed for analysis)
@@ -293,22 +304,13 @@ The `nutrients` column stores a JSON object with the following fields:
 **Sample Rows:**
 ```
 id: 1
-date: "2025-11-28"
+date: "11/28/2025"
 food_name: "Chicken Breast"
 meal: "Lunch"
 quantity: 6.0
 units: "oz"
 calories: 280.0
-nutrients: '{"fat":6.0,"protein":53.0,"carbs":0.0,"sat_fat":1.5,"sugar":0.0,"fiber":0.0,"cholesterol":145,"sodium":134}'
-
-id: 2
-date: "2025-11-28"
-food_name: "Brown Rice"
-meal: "Lunch"
-quantity: 1.0
-units: "cup"
-calories: 216.0
-nutrients: '{"fat":1.8,"protein":5.0,"carbs":45.0,"sat_fat":0.4,"sugar":0.7,"fiber":3.5,"cholesterol":0,"sodium":10}'
+nutrients: {"fat":6.0,"protein":53.0,"carbs":0.0,"sat_fat":1.5,"sugar":0.0,"fiber":0.0,"cholesterol":145,"sodium":134}
 ```
 
 ---
@@ -340,7 +342,7 @@ Additional files not processed (no processing schema defined):
 ### 2. Read and Parse CSVs
 - Parse each CSV with proper encoding
 - Handle malformed rows gracefully
-- Normalize date formats to YYYY-MM-DD
+- Normalize date formats to MM/DD/YYYY
 
 ### 3. Transform Data
 - Apply column mappings
@@ -348,14 +350,13 @@ Additional files not processed (no processing schema defined):
 - Create JSON for nutrients field
 - Aggregate where specified (GROUP BY date)
 
-### 4. Load into SQLite
+### 4. Load into PostgreSQL
 - Create tables if not exist
 - Insert/update records
 - Handle conflicts (UPSERT on date for aggregated tables)
 
 ### 5. Create Indexes
 - Primary keys on `date` for all aggregated tables
-- Foreign key from FOOD.date to MARKERS.date
 - Indexes on FOOD.date and FOOD.meal for query performance
 
 ---
@@ -401,7 +402,7 @@ FROM markers m
 LEFT JOIN activity a ON m.date = a.date
 LEFT JOIN calories c ON m.date = c.date
 LEFT JOIN macros mac ON m.date = mac.date
-WHERE m.date = '2025-11-28';
+WHERE m.date = '11/28/2025';
 ```
 
 ### Get all food consumed on a date:
@@ -412,17 +413,17 @@ SELECT
     quantity,
     units,
     calories,
-    json_extract(nutrients, '$.protein') as protein,
-    json_extract(nutrients, '$.carbs') as carbs
+    nutrients->>'protein' as protein,
+    nutrients->>'carbs' as carbs
 FROM food
-WHERE date = '2025-11-28'
+WHERE date = '11/28/2025'
 ORDER BY meal, id;
 ```
 
 ### Calculate weekly averages:
 ```sql
 SELECT
-    strftime('%Y-%W', date) as week,
+    date_trunc('week', to_date(date, 'MM/DD/YYYY')) as week,
     AVG(weight) as avg_weight,
     AVG(steps) as avg_steps,
     SUM(exercise_minutes) as total_exercise
@@ -436,8 +437,10 @@ ORDER BY week DESC;
 
 ## Notes
 
-- **Date Format:** All dates stored as TEXT in `YYYY-MM-DD` format (SQLite standard)
-- **Timestamps:** `created_at` and `updated_at` track when records are inserted/modified
-- **NULL Values:** Columns may be NULL if data not available for that date
-- **JSON in SQLite:** SQLite supports JSON functions (`json_extract`) for querying nutrients
-- **UPSERT Strategy:** Use `INSERT OR REPLACE` for aggregated tables to handle re-imports
+- **Auto-Increment IDs:** All tables use `id SERIAL PRIMARY KEY` for auto-incrementing IDs
+- **Date Format:** All dates stored as TEXT in `MM/DD/YYYY` format (as exported from LoseIt)
+- **Timestamps:** `created_at` and `updated_at` are set automatically on insert
+- **NULL Values:** Data columns (not id, date, created_at, updated_at) may be NULL if data not available
+- **JSON in PostgreSQL:** PostgreSQL supports JSONB type and operators (`->`, `->>`) for querying nutrients
+- **UPSERT Strategy:** For aggregated tables (MARKERS, ACTIVITY, CALORIES, MACROS), use ON CONFLICT for re-imports
+- **Date Uniqueness:** Aggregated tables have UNIQUE constraint on `date`; FOOD table allows multiple rows per date

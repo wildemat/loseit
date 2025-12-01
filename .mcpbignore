@@ -1,0 +1,43 @@
+# Development files
+*.ts
+tsconfig.json
+.gitignore
+
+# Source files (not needed in bundle, only dist/)
+create-mcpb.ts
+export-data.ts
+transform.ts
+ingest.ts
+query-stats.ts
+mcp-server.ts
+
+# Database files (data is in PostgreSQL server, not in bundle)
+db/*.sql
+db/load-data.ts
+
+# Raw and transformed data (lives in database, not bundle)
+raw_export/
+transformed/
+*.zip
+
+# Documentation not needed in bundle
+DATATYPES.md
+EXAMPLES.md
+SCHEMA.md
+MCP.md
+SETUP.md
+
+# Example files
+mcp-server-refactored-example.ts
+
+# Docker configuration
+docker-compose.yml
+
+# Apple Health data
+apple_health_export.zip
+
+# Support files
+Support/
+
+# Claude settings
+.claude/

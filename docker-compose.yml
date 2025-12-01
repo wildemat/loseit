@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # PostgreSQL database for LoseIt health data
+  postgres:
+    image: postgres:16-alpine
+    container_name: loseit-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: loseit
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: loseit
+    ports:
+      - "5432:5432"
+    volumes:
+      - loseit-data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loseit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Optional: pgAdmin for database management UI
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: loseit-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@loseit.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    profiles:
+      - ui
+
+volumes:
+  loseit-data:
+    name: loseit-postgres-data

@@ -1,134 +1,167 @@
-# TODO
+# LoseIt MCP Server
 
-- pull in apple health export from the app
+Query your LoseIt health tracking data directly in Claude Desktop using the Model Context Protocol (MCP).
 
-# LoseIt Data Export & Processing Scripts
+## What This Does
 
-Node.js/TypeScript scripts for downloading and processing your personal data from LoseIt.com.
+This MCP server lets you ask Claude natural language questions about your LoseIt health data:
 
-## Scripts
+- **"What was my weight on November 15th?"**
+- **"Show me my calorie intake for the past week"**
+- **"How has my weight changed over the past month?"**
+- **"What did I eat for breakfast yesterday?"**
 
-### 1. Export Script (`export-data.ts`)
+## Architecture
 
-Downloads your LoseIt data using browser authentication.
+```
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│  Claude Desktop │ --> │  MCP Server      │ --> │  PostgreSQL DB  │
+│                 │     │  (loseit.mcpb)   │     │  (local/remote) │
+└─────────────────┘     └──────────────────┘     └─────────────────┘
+```
 
-**How it works:**
+**Key Features:**
+- ✅ MCP bundle is lightweight and data-free (~2MB vs 16MB)
+- ✅ Update your data without touching the MCP bundle
+- ✅ Database can be local (Docker) OR remote (cloud)
+- ✅ No filesystem dependencies - data lives in PostgreSQL
+- ✅ Fast queries with proper database indexing
 
-1. Opens a Chrome browser window to loseit.com
-2. Waits for you to manually sign in
-3. Captures your authentication cookies
-4. Uses those credentials to download your data export from `/export/data`
-5. Saves the zip file as `loseit-export-YYYY-MM-DD.zip`
+## Quick Start
 
-### 2. Combine Script (`combine_data.ts`)
-
-Processes a downloaded zip file and combines all CSVs into a single file.
-
-**How it works:**
-
-1. Takes a zip file (auto-finds latest if not specified)
-2. Extracts all CSV files to a temporary directory
-3. Joins all CSVs by their date field
-4. Saves combined data to `latest_data.csv` (overwrites existing)
-5. Cleans up temporary files
-
-## Setup
-
-### Prerequisites
-
-- Node.js (v16 or higher)
-- npm or yarn
-
-### Installation
-
-1. Install dependencies:
+### 1. Install Dependencies
 
 ```bash
+git clone <your-repo>
+cd loseit
 npm install
 ```
 
-2. Install Playwright browsers:
+### 2. Start Database & Load Data
 
 ```bash
-npx playwright install chromium
+# Start PostgreSQL in Docker
+npm run db:start
+
+# Export data from LoseIt.com (opens browser)
+npm run data:export
+
+# Process and load into database
+npm run data:process
+npm run db:load
 ```
 
-## Usage
-
-### Exporting Data
-
-Download your data from LoseIt:
+### 3. Build & Install MCP Bundle
 
 ```bash
-npm run export
+# Build the MCP bundle
+npm run mcp:bundle
+
+# Install loseit.mcpb in Claude Desktop
+# Drag into Settings → Extensions
 ```
 
-Steps:
+### 4. Configure & Use
 
-1. Browser window opens to loseit.com
-2. Sign in to your account
-3. Press Enter in the terminal when signed in
-4. Data downloads as `loseit-export-YYYY-MM-DD.zip`
+In Claude Desktop, configure the database URL:
+- Default: `postgresql://loseit:password@localhost:5432/loseit`
 
-### Combining Data
+Restart Claude Desktop and start asking questions!
 
-Process the downloaded zip file and combine all CSVs:
+## Updating Your Data
+
+When you want to refresh your LoseIt data:
 
 ```bash
-# Auto-find latest export file
-npm run combine
-
-# Or specify a zip file
-npm run combine path/to/loseit-export-2025-11-28.zip
+npm run data:update
 ```
 
-This will:
+This downloads the latest export, processes it, and loads it into PostgreSQL. **No need to rebuild or reinstall the MCP bundle!**
 
-- Extract all CSV files from the zip
-- Join them by date field
-- Save to `latest_data.csv` (overwrites existing)
+## Available Tools
 
-### Complete Workflow
+The MCP server provides 7 tools:
 
-```bash
-# 1. Export data
-npm run export
+1. **get_weight** - Weight and body fat measurements
+2. **get_calories** - Calorie intake, expenditure, and budget
+3. **get_activity** - Steps, sleep, and exercise data
+4. **get_macros** - Protein, carbs, fiber intake
+5. **get_food_logs** - Detailed food entries with filtering
+6. **get_daily_summary** - Comprehensive daily overview
+7. **get_trends** - Trend analysis with aggregation (day/week/month)
 
-# 2. Combine the data
-npm run combine
+## Documentation
 
-# Result: latest_data.csv contains all your data in one file
-```
+- **[SETUP.md](./SETUP.md)** - Complete setup guide with troubleshooting
+- **[EXAMPLES.md](./EXAMPLES.md)** - Example queries and use cases
+- **[SCHEMA.md](./SCHEMA.md)** - Database schema documentation
 
-## Output Files
+## Package Scripts
 
-- `loseit-export-YYYY-MM-DD.zip` - Raw export from LoseIt containing multiple CSVs
-- `latest_data.csv` - Combined data from all CSVs, joined by date
+### Data Management
+- `npm run data:export` - Download data from LoseIt.com
+- `npm run data:process` - Transform CSVs to database format
+- `npm run data:update` - Complete data refresh workflow
+
+### Database
+- `npm run db:start` - Start PostgreSQL in Docker
+- `npm run db:stop` - Stop database server
+- `npm run db:load` - Load processed data into database
+- `npm run db:psql` - Open PostgreSQL shell
+- `npm run db:ui` - Start pgAdmin web UI
+
+### MCP Bundle
+- `npm run mcp:bundle` - Build the .mcpb bundle
+- `npm run mcp:validate` - Validate manifest.json
+- `npm run mcp:info` - Show bundle info
+
+### All-in-One
+- `npm run setup` - Complete initial setup (db + data + bundle)
+
+## Using a Remote Database
+
+Want to use a cloud database instead of local Docker?
+
+1. Set up PostgreSQL on [Railway](https://railway.app), [Supabase](https://supabase.com), or [Neon](https://neon.tech)
+2. Get your connection URL: `postgresql://user:pass@host:port/database`
+3. Load your data:
+   ```bash
+   export DATABASE_URL="your-connection-url"
+   npm run db:load
+   ```
+4. Configure the URL in Claude Desktop settings
+
+See [SETUP.md](./SETUP.md#using-a-remote-database) for details.
+
+## Requirements
+
+- **Node.js** >= 18.0.0
+- **Docker** (for local database) OR PostgreSQL server access
+- **Claude Desktop**
+- **npm** package manager
 
 ## Troubleshooting
 
-- **No cookies found**: Make sure you're fully signed in before pressing Enter
-- **Export request failed**: Check that you can manually access https://www.loseit.com/export/data while logged in
-- **Browser doesn't open**: Make sure Playwright browsers are installed with `npx playwright install chromium`
+### Database won't start
+```bash
+npm run db:stop
+npm run db:start
+npm run db:logs
+```
 
-## Technical Details
+### MCP server can't connect
+1. Verify database is running: `docker ps`
+2. Test connection: `npm run db:psql`
+3. Check URL in Claude Desktop settings
 
-### Export Script
+### Data not showing up
+```bash
+# Verify data is loaded
+npm run db:psql
+# Then: SELECT COUNT(*) FROM markers;
+```
 
-- Uses Playwright for browser automation
-- Runs in non-headless mode for manual sign-in
-- Captures session cookies after authentication
-- Downloads zip file using Playwright's download event handler
-- Properly cleans up browser process on exit
-
-### Combine Script
-
-- Uses `adm-zip` for zip extraction
-- Uses `csv-parse` and `csv-stringify` for CSV processing
-- Automatically detects date fields (case-insensitive: "date", "datetime", "timestamp")
-- Normalizes dates to YYYY-MM-DD format
-- Prefixes column names with source CSV filename to avoid collisions
-- Sorts final output by date
+See [SETUP.md](./SETUP.md#troubleshooting) for more help.
 
 ## License
 

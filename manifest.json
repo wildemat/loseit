@@ -1,0 +1,66 @@
+{
+  "manifest_version": "0.3",
+  "name": "loseit",
+  "version": "1.0.0",
+  "display_name": "LoseIt Health Data",
+  "description": "Query LoseIt health tracking data including weight, calories, activity, macros, and food logs",
+  "author": {
+    "name": "LoseIt MCP"
+  },
+  "license": "MIT",
+  "keywords": [
+    "health",
+    "fitness",
+    "nutrition",
+    "tracking",
+    "weight-loss",
+    "loseit"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/mcp-server.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/mcp-server.js"],
+      "env": {
+        "DATABASE_URL": "postgresql://loseit:password@localhost:5432/loseit"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "get_weight",
+      "description": "Get weight and body fat measurements for a specific date or date range"
+    },
+    {
+      "name": "get_calories",
+      "description": "Get calorie intake, expenditure, and budget data"
+    },
+    {
+      "name": "get_activity",
+      "description": "Get physical activity data including steps, sleep, and exercise"
+    },
+    {
+      "name": "get_macros",
+      "description": "Get macronutrient intake (protein, carbs, fiber)"
+    },
+    {
+      "name": "get_food_logs",
+      "description": "Get detailed food log entries with optional filtering"
+    },
+    {
+      "name": "get_daily_summary",
+      "description": "Get a comprehensive summary combining all data sources for a specific date"
+    },
+    {
+      "name": "get_trends",
+      "description": "Get trend analysis over a date range with aggregation"
+    }
+  ],
+  "compatibility": {
+    "platforms": ["darwin", "linux", "win32"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}

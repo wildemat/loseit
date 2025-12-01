@@ -8,6 +8,7 @@ dist/
 loseit-export-*.zip
 latest_data.csv
 tmp/
+transformed/
 
 # OS files
 .DS_Store
@@ -27,3 +28,12 @@ npm-debug.log*
 apple_health_export
 raw_export
 .claude
+
+# Database files
+db/*.db
+db/*.db-journal
+db/*.db-shm
+db/*.db-wal
+
+# MCP bundle
+loseit.mcpb
