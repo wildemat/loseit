@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "display_name": "LoseIt Health Data",
   "description": "Query LoseIt health tracking data including weight, calories, activity, macros, and food logs",
+  "icon": "icon.png",
   "author": {
     "name": "LoseIt MCP"
   },
