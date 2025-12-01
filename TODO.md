@@ -1,0 +1,4 @@
+- Service for manual user uploads of data (only way that's legal)
+- MCP tool for chart generation given query results
+- MCP tool for checking session expiry and prompting re-auth
+- MCP inspector for local testing

@@ -118,10 +118,13 @@ async function transformMarkers() {
     console.log(`  Processed weights.csv: ${records.length} records`);
   }
 
-  // Write to CSV
+  // Write to CSV with explicit columns
   const outputPath = path.join(OUTPUT_DIR, 'markers.csv');
   const data = Array.from(markers.values()).sort((a, b) => a.date.localeCompare(b.date));
-  const csv = stringify(data, { header: true });
+  const csv = stringify(data, {
+    header: true,
+    columns: ['date', 'weight', 'body_fat']
+  });
   fs.writeFileSync(outputPath, csv);
 
   console.log(`  ✓ Created markers.csv: ${data.length} records\n`);
@@ -198,10 +201,13 @@ async function transformActivity() {
     console.log(`  Processed exercise-logs.csv: ${records.length} records`);
   }
 
-  // Write to CSV
+  // Write to CSV with explicit columns
   const outputPath = path.join(OUTPUT_DIR, 'activity.csv');
   const data = Array.from(activity.values()).sort((a, b) => a.date.localeCompare(b.date));
-  const csv = stringify(data, { header: true });
+  const csv = stringify(data, {
+    header: true,
+    columns: ['date', 'steps', 'sleep_hours', 'exercise_minutes', 'exercise_count']
+  });
   fs.writeFileSync(outputPath, csv);
 
   console.log(`  ✓ Created activity.csv: ${data.length} records\n`);
@@ -233,10 +239,13 @@ async function transformCalories() {
     console.log(`  Processed daily-calorie-summary.csv: ${records.length} records`);
   }
 
-  // Write to CSV
+  // Write to CSV with explicit columns
   const outputPath = path.join(OUTPUT_DIR, 'calories.csv');
   const data = calories.sort((a, b) => a.date.localeCompare(b.date));
-  const csv = stringify(data, { header: true });
+  const csv = stringify(data, {
+    header: true,
+    columns: ['date', 'food_calories', 'exercise_calories', 'calorie_budget', 'tdee']
+  });
   fs.writeFileSync(outputPath, csv);
 
   console.log(`  ✓ Created calories.csv: ${data.length} records\n`);
@@ -310,10 +319,13 @@ async function transformMacros() {
     console.log(`  Processed fiber.csv: ${records.length} records`);
   }
 
-  // Write to CSV
+  // Write to CSV with explicit columns
   const outputPath = path.join(OUTPUT_DIR, 'macros.csv');
   const data = Array.from(macros.values()).sort((a, b) => a.date.localeCompare(b.date));
-  const csv = stringify(data, { header: true });
+  const csv = stringify(data, {
+    header: true,
+    columns: ['date', 'protein_grams', 'carbs_grams', 'fiber_grams']
+  });
   fs.writeFileSync(outputPath, csv);
 
   console.log(`  ✓ Created macros.csv: ${data.length} records\n`);
@@ -365,10 +377,13 @@ async function transformFood() {
     console.log(`  Processed food-logs.csv: ${records.length} records`);
   }
 
-  // Write to CSV
+  // Write to CSV with explicit columns
   const outputPath = path.join(OUTPUT_DIR, 'food.csv');
   const data = food.sort((a, b) => a.date.localeCompare(b.date));
-  const csv = stringify(data, { header: true });
+  const csv = stringify(data, {
+    header: true,
+    columns: ['date', 'food_name', 'meal', 'quantity', 'units', 'calories', 'nutrients']
+  });
   fs.writeFileSync(outputPath, csv);
 
   console.log(`  ✓ Created food.csv: ${data.length} records\n`);

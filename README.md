@@ -43,7 +43,11 @@ npm install
 # Start PostgreSQL in Docker
 npm run db:start
 
-# Export data from LoseIt.com (opens browser)
+# Set up your LoseIt credentials
+cp .env.example .env
+# Edit .env and add your LoseIt email and password
+
+# Export data from LoseIt.com (automated, headless)
 npm run data:export
 
 # Process and load into database
@@ -76,11 +80,28 @@ When you want to refresh your LoseIt data:
 npm run data:update
 ```
 
-This downloads the latest export, processes it, and loads it into PostgreSQL. **No need to rebuild or reinstall the MCP bundle!**
+This downloads the latest export, processes it, and loads it into PostgreSQL using **incremental updates** (only new/changed records are updated). **No need to rebuild or reinstall the MCP bundle!**
+
+### Incremental vs Full Reload
+
+By default, `npm run db:load` performs an **incremental update**:
+- **Upserts** records for tables with unique date constraints (markers, activity, calories, macros)
+- For the food table, deletes existing records for dates in the new export, then inserts fresh data
+- Faster and preserves any manual database changes outside the date range
+
+For a complete refresh, use:
+```bash
+npm run db:load:full
+```
+
+This performs a **full reload**:
+- Deletes all existing data from all tables
+- Inserts all records from the export
+- Use this for the initial load or if you want a clean slate
 
 ## Available Tools
 
-The MCP server provides 7 tools:
+The MCP server provides 7 core tools:
 
 1. **get_weight** - Weight and body fat measurements
 2. **get_calories** - Calorie intake, expenditure, and budget
@@ -90,23 +111,57 @@ The MCP server provides 7 tools:
 6. **get_daily_summary** - Comprehensive daily overview
 7. **get_trends** - Trend analysis with aggregation (day/week/month)
 
+## Additional Data Sources
+
+### Apple Health Integration
+Process Apple Health XML exports to supplement activity data with:
+- Detailed workout sessions
+- Heart rate monitoring
+- Sleep analysis
+- Comprehensive activity metrics
+
+See [apple_health/README.md](./apple_health/README.md) for details.
+
+### Obsidian Weightlifting Notes
+Parse freeform weightlifting notes from Obsidian to track:
+- Strength progression
+- Personal records (PRs)
+- Training volume
+- Workout frequency
+
+See [obsidian/README.md](./obsidian/README.md) for details.
+
 ## Documentation
 
 - **[SETUP.md](./SETUP.md)** - Complete setup guide with troubleshooting
 - **[EXAMPLES.md](./EXAMPLES.md)** - Example queries and use cases
 - **[SCHEMA.md](./SCHEMA.md)** - Database schema documentation
 
+## Configuration
+
+### Environment Variables
+
+Create a `.env` file with your LoseIt credentials:
+
+```bash
+LOSEIT_EMAIL=your-email@example.com
+LOSEIT_PASSWORD=your-password
+```
+
+These are used for automated data export via headless browser automation.
+
 ## Package Scripts
 
 ### Data Management
-- `npm run data:export` - Download data from LoseIt.com
+- `npm run data:export` - Download data from LoseIt.com (requires .env file)
 - `npm run data:process` - Transform CSVs to database format
 - `npm run data:update` - Complete data refresh workflow
 
 ### Database
 - `npm run db:start` - Start PostgreSQL in Docker
 - `npm run db:stop` - Stop database server
-- `npm run db:load` - Load processed data into database
+- `npm run db:load` - Load processed data (incremental upsert)
+- `npm run db:load:full` - Full reload (delete all, then insert)
 - `npm run db:psql` - Open PostgreSQL shell
 - `npm run db:ui` - Start pgAdmin web UI
 

@@ -1,11 +1,15 @@
 # Dependencies
 node_modules/
 
+# Environment variables (contains credentials)
+.env
+
 # Build output
 dist/
 
 # Generated data files
 loseit-export-*.zip
+loseit-export-latest.zip
 latest_data.csv
 tmp/
 transformed/
@@ -25,8 +29,18 @@ Thumbs.db
 npm-debug.log*
 
 *.zip
-apple_health_export
-raw_export
+*.xml
+
+# Health data exports (keep private)
+apple_health_export/
+apple_health/*.xml
+raw_export/
+
+# Obsidian vault (personal notes)
+obsidian/vault/
+obsidian/*.md
+!obsidian/README.md
+
 .claude
 
 # Database files

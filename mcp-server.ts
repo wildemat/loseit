@@ -7,6 +7,7 @@ import {
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 import { executeQuery } from './db/connection.js';
+import { generateChart, ChartConfig } from './chart-generator.js';
 
 // Date parsing helper
 function parseDateInput(input: string): string {
@@ -447,10 +448,12 @@ async function getTrends(args: any) {
   let periodLabel = 'c.date';
 
   if (group_by === 'week') {
-    groupByClause = `strftime('%Y-%W', substr(c.date, 7, 4) || '-' || substr(c.date, 1, 2) || '-' || substr(c.date, 4, 2))`;
+    // PostgreSQL: Convert date string (MM/DD/YYYY format) and format as ISO year-week
+    groupByClause = `TO_CHAR(TO_DATE(c.date, 'MM/DD/YYYY'), 'IYYY-IW')`;
     periodLabel = groupByClause;
   } else if (group_by === 'month') {
-    groupByClause = `substr(c.date, 1, 7)`;
+    // PostgreSQL: Extract year-month from date string (MM/DD/YYYY format)
+    groupByClause = `TO_CHAR(TO_DATE(c.date, 'MM/DD/YYYY'), 'YYYY-MM')`;
     periodLabel = groupByClause;
   } else {
     groupByClause = 'c.date';
@@ -620,6 +623,37 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ['start_date', 'end_date', 'metrics'],
         },
       },
+      {
+        name: 'create_chart',
+        description: 'Create an interactive chart from data and open it in the browser. Supports multiple traces/series.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            title: { type: 'string', description: 'Chart title', required: true },
+            xaxis_title: { type: 'string', description: 'X-axis label' },
+            yaxis_title: { type: 'string', description: 'Y-axis label' },
+            traces: {
+              type: 'array',
+              description: 'Array of data series to plot',
+              items: {
+                type: 'object',
+                properties: {
+                  x: { type: 'array', description: 'X-axis values' },
+                  y: { type: 'array', description: 'Y-axis values' },
+                  name: { type: 'string', description: 'Series name for legend' },
+                  type: { type: 'string', enum: ['scatter', 'bar', 'line'], description: 'Chart type (default: scatter)' },
+                  mode: { type: 'string', enum: ['lines', 'markers', 'lines+markers'], description: 'Display mode (default: lines+markers)' },
+                },
+                required: ['x', 'y'],
+              },
+            },
+            width: { type: 'number', description: 'Chart width in pixels (default: 1000)' },
+            height: { type: 'number', description: 'Chart height in pixels (default: 600)' },
+            open_browser: { type: 'boolean', description: 'Open chart in browser (default: true)' },
+          },
+          required: ['title', 'traces'],
+        },
+      },
     ],
   };
 });
@@ -651,6 +685,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
       case 'get_trends':
         result = await getTrends(args);
+        break;
+      case 'create_chart':
+        const chartConfig: ChartConfig = {
+          title: args?.title as string,
+          xaxis_title: args?.xaxis_title as string | undefined,
+          yaxis_title: args?.yaxis_title as string | undefined,
+          traces: args?.traces as any[],
+          width: args?.width as number | undefined,
+          height: args?.height as number | undefined,
+        };
+        const { filepath, imageData } = await generateChart(chartConfig, args?.open_browser !== false);
+
+        // Return image data for Claude Desktop to display
+        if (imageData) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Chart created successfully! The chart image is included below.\n\nFilepath: ${filepath}`,
+              },
+              {
+                type: 'image',
+                data: imageData,
+                mimeType: 'image/png',
+              },
+            ],
+            isError: false,
+          };
+        }
+
+        result = {
+          success: true,
+          filepath,
+          message: `Chart created and saved to: ${filepath}`,
+        };
         break;
       default:
         throw new Error(`Unknown tool: ${name}`);

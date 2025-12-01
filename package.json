@@ -12,6 +12,7 @@
     "db:stop": "docker-compose down",
     "db:logs": "docker-compose logs -f postgres",
     "db:load": "ts-node db/load-data.ts",
+    "db:load:full": "ts-node db/load-data.ts --full",
     "db:psql": "docker-compose exec postgres psql -U loseit -d loseit",
     "db:ui": "docker-compose --profile ui up -d pgadmin && echo 'pgAdmin available at http://localhost:5050 (admin@loseit.local / admin)'",
     "build": "tsc",
@@ -28,6 +29,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/adm-zip": "^0.5.5",
+    "@types/dotenv": "^6.1.1",
     "@types/node": "^20.10.0",
     "@types/pg": "^8.10.9",
     "ts-node": "^10.9.2",
@@ -38,8 +40,11 @@
     "adm-zip": "^0.5.10",
     "csv-parse": "^5.5.3",
     "csv-stringify": "^6.4.5",
-    "pg": "^8.11.3",
+    "dotenv": "^17.2.3",
+    "kaleido": "^0.2.2",
     "mysql2": "^3.6.5",
-    "playwright": "^1.40.0"
+    "pg": "^8.11.3",
+    "playwright": "^1.40.0",
+    "plotly.js-dist-min": "^3.3.0"
   }
 }
