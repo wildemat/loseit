@@ -2,3 +2,6 @@
 - MCP tool for chart generation given query results
 - MCP tool for checking session expiry and prompting re-auth
 - MCP inspector for local testing
+
+* use the Loseit email reports to process and persist the data.
+* combine with health auto export routine
